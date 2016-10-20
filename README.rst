@@ -16,8 +16,11 @@ MCMC
 	:target: https://pyup.io/repos/github/mchakra2/mcmc/
 	:alt: Updates
 
-.. image:: https://coveralls.io/repos/github/mchakra2/mcmc/badge.svg?branch=master
-	:target: https://coveralls.io/github/mchakra2/mcmc?branch=master
+.. image:: https://coveralls.io/repos/github/mchakra2/mcmc/badge.svg
+        :target: https://coveralls.io/github/mchakra2/mcmc
+
+
+
 
 Applying MCMC to generate a sequence of connected graphs
 
