@@ -10,10 +10,13 @@ Tests for `mcmc` module.
 
 import math
 import sys
+import os
 import unittest
+import networkx as nx
 from contextlib import contextmanager
 from click.testing import CliRunner
 from mcmc import mcmc
+
 
 
 class TestMcmc(unittest.TestCase):
@@ -45,4 +48,20 @@ class TestMcmc(unittest.TestCase):
         self.assertEqual(round(wt,2),val)
 
     
+    def test_input_file(self):
+           
+        self.assertRaises(IOError,self.m.input_arg,'random_file_which_should_not_exist.txt')
+        #self.m.main()
+        flag = os.path.getsize(self.m.input_f)
+        self.assertGreater(flag,0)
 
+    def test_tuples(self):
+        self.m.input_arg(self.m.input_f)
+        self.assertGreater(len(self.m.M),0)#To ensure that the number of vertices is greater than 0
+
+    def test_make_init_graph(self):
+        self.m.input_arg(self.m.input_f)
+        self.m.make_init_graph()
+        self.assertIsInstance(self.m.G,nx.Graph)
+        self.assertTrue(nx.is_connected(self.m.G),'Initial Graph is not connected')
+        
