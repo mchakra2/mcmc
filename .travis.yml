@@ -18,7 +18,7 @@ install:
 # command to run tests, e.g. python setup.py test
 script:
 - tox -e ${TOXENV}
-- coverage run --source=langevin_dynamics/langevin_dynamics.py setup.py test
+- coverage run --source=mcmc/mcmc.py setup.py test
 - coverage report -m
 
 after_success: coveralls
