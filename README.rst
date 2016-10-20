@@ -12,11 +12,12 @@ MCMC
 .. image:: https://readthedocs.org/projects/mcmc/badge/?version=latest
         :target: https://mcmc.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
-
 .. image:: https://pyup.io/repos/github/mchakra2/mcmc/shield.svg
-     :target: https://pyup.io/repos/github/mchakra2/mcmc/
-     :alt: Updates
+	:target: https://pyup.io/repos/github/mchakra2/mcmc/
+	:alt: Updates
 
+.. image:: https://coveralls.io/repos/github/mchakra2/mcmc/badge.svg?branch=master
+	:target: https://coveralls.io/github/mchakra2/mcmc?branch=master
 
 Applying MCMC to generate a sequence of connected graphs
 
