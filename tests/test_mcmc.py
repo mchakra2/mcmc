@@ -32,7 +32,7 @@ class TestMcmc(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.m.dist(2.2,'a')
         with self.assertRaises(TypeError):
-            self.m.dist(('a','A'),(2.2,1))
+            self.m.dist(('A',3),(2.2,1))
         #self.assertRaises(TypeError,self.m.dist,[2,3])
         #self.assertRaises(TypeError,self.m.dist,[2.3,3.2])
 
@@ -43,4 +43,6 @@ class TestMcmc(unittest.TestCase):
         val=round(math.sqrt(2.2**2+2.2**2),2)
         wt=self.m.dist((2.2,2.2), (0,0))
         self.assertEqual(round(wt,2),val)
+
+    
 
