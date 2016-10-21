@@ -16,7 +16,8 @@ requirements = [
 
 test_requirements = [
     'graphviz',
-    'networkx'
+    'networkx',
+    'numpy'
     
     # TODO: put package test requirements here
 ]
