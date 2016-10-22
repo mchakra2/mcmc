@@ -8,7 +8,7 @@ import os
 class MarkovChain:
     input_f='./IOFiles/input.txt'
     G1=nx.Graph()
-    iterations=10
+    iterations=20
     
     def main(self):
         self.input_arg(self.input_f)
@@ -25,7 +25,7 @@ class MarkovChain:
                 #print(self.G2.number_of_edges())
                 A=np.random.choice(len(self.M), 2,replace=0)#Choose a tuple randomly without replacement from the range of indices in M
                 flag=self.graph_change(A[0],A[1])
-                print(self.G2.number_of_edges())
+                #print(self.G2.number_of_edges())
                 bridge_selection+=1
             if self.G1!=self.G2:
                 diff_g+=1
@@ -59,7 +59,7 @@ class MarkovChain:
             if not li.startswith("#"):
                 tmp = line.split(",")
                 self.M.append((float(tmp[0]), float(tmp[1])))
-        print(self.M)
+        #print(self.M)
         f.close()
         #return (G)
 
@@ -67,9 +67,9 @@ class MarkovChain:
         
         self.G1.add_nodes_from(self.M)
         for i in range(1,len(self.M)):
-            print (i)
+            #print (i)
             self.G1.add_edge(self.M[0],self.M[i],weight=self.dist(self.M[0],self.M[i]))
-        print(self.G1.number_of_edges())
+        #print(self.G1.number_of_edges())
 
     def graph_change(self,idx1,idx2):
         self.G2=deepcopy(self.G1)
@@ -107,6 +107,6 @@ class MarkovChain:
 
     def calculate_q(self,G):
         b=self.calculate_bridges(G)
-        nodes=G.number_of_edges()
+        nodes=float(G.number_of_edges())
         q=(nodes*(nodes-1)/2)-b
         return(1/q)
