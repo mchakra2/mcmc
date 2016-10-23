@@ -28,7 +28,7 @@ class TestMcmc(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_dist_arg_type(self):
+    def test_dist_arg_type(self):#test if the dist function rises errors when given non numerical tuples  as input
        
         with self.assertRaises(TypeError):
             self.m.dist((-4,1),1)
@@ -36,19 +36,17 @@ class TestMcmc(unittest.TestCase):
             self.m.dist(2.2,'a')
         with self.assertRaises(TypeError):
             self.m.dist(('A',3),(2.2,1))
-        #self.assertRaises(TypeError,self.m.dist,[2,3])
-        #self.assertRaises(TypeError,self.m.dist,[2.3,3.2])
 
-        #self.assertRaises(TypeError,self.m.dist,['a','b'])
-        #self.assertRaises(TypeError,self.m.dist,[(2,3),(3.2)])
-    def test_dist_return(self):
+
+
+    def test_dist_return(self):#To check if dist function returns the cartesian distance between  given tuples   
         
         val=round(math.sqrt(2.2**2+2.2**2),2)
         wt=self.m.dist((2.2,2.2), (0,0))
         self.assertEqual(round(wt,2),val)
         self.assertEqual(self.m.dist((2,0),(2,0)),0)
     
-    def test_input_file(self):
+    def test_input_file(self):#Test that input_arg raises error if input file does not exist and is not  empty
            
         self.assertRaises(IOError,self.m.input_arg,'random_file_which_should_not_exist.txt')
         #self.m.main()
@@ -64,9 +62,9 @@ class TestMcmc(unittest.TestCase):
         self.m.input_arg('./tests/test_input.txt')
         self.m.make_init_graph()
         self.assertIsInstance(self.m.G1,nx.Graph)
-        self.assertTrue(nx.is_connected(self.m.G1),'Initial Graph is connected')
+        self.assertTrue(nx.is_connected(self.m.G1),'Initial Graph is connected')#checks if initial graph is connected
         
-        self.assertTrue(self.m.G1.number_of_edges()==(self.m.G1.number_of_nodes() -1))
+        #self.assertTrue(self.m.G1.number_of_edges()==(self.m.G1.number_of_nodes() -1))
         self.m.G1.clear()
 
     def test_graph_change_add(self):
@@ -118,6 +116,6 @@ class TestMcmc(unittest.TestCase):
 
     def test_main(self):
         result=self.m.main()
-        self.assertEqual(result,self.m.iterations)
+        self.assertEqual(result,self.m.iterations)#to check if the  proposed graph is different from the previous graph
         self.m.G1.clear()
         self.m.G2.clear()
