@@ -52,6 +52,7 @@ class TestMcmc(unittest.TestCase):
         #self.m.main()
         flag = os.path.getsize(self.m.input_f)
         self.assertGreater(flag,0)
+        self.assertGreater(self.m.T,0)#makes sure that T is strictly positive
 
     def test_tuples(self):
         self.m.input_arg('./tests/test_input.txt')
@@ -65,7 +66,7 @@ class TestMcmc(unittest.TestCase):
         self.assertTrue(nx.is_connected(self.m.G1),'Initial Graph is connected')#checks if initial graph is connected
         
         #self.assertTrue(self.m.G1.number_of_edges()==(self.m.G1.number_of_nodes() -1))
-        self.m.G1.clear()
+
 
     def test_graph_change_add(self):
         self.m.input_arg('./tests/test_input.txt')
@@ -75,14 +76,15 @@ class TestMcmc(unittest.TestCase):
         self.m.G1.clear()
         self.m.G2.clear()
 
+
     def test_graph_change_bridge(self):
         self.m.input_arg('./tests/test_input.txt')
         self.m.make_init_graph()
-        
         self.assertEqual(self.m.graph_change(0,2),-1)
         self.assertEqual(self.m.G1.number_of_edges(),self.m.G2.number_of_edges())
         self.m.G1.clear()
         self.m.G2.clear()
+
 
     def test_graph_change_remove(self):
         self.m.input_arg('./tests/test_input.txt')
@@ -96,6 +98,7 @@ class TestMcmc(unittest.TestCase):
         self.assertNotEqual(self.m.G1.number_of_edges(),self.m.G2.number_of_edges())
         self.m.G1.clear()
         self.m.G2.clear()
+
 
     def test_calculate_bridges(self):
         a=1
@@ -119,3 +122,13 @@ class TestMcmc(unittest.TestCase):
         self.assertEqual(result,self.m.iterations)#to check if the  proposed graph is different from the previous graph
         self.m.G1.clear()
         self.m.G2.clear()
+
+
+    def test_theta_func(self):
+
+        G=nx.star_graph(4)
+        self.assertNotEqual(self.m.theta_func(G),0)
+
+''' def test_stationary(self):
+        result=self.m.main
+        self.assertGreater(self.m.test_stationary(),)'''

@@ -9,6 +9,8 @@ class MarkovChain:
     input_f='./IOFiles/input.txt'
     G1=nx.Graph()
     iterations=20#Number of Steps in the simulation
+    T=1
+    r=1
     
     def main(self):
         self.input_arg(self.input_f)
@@ -59,8 +61,17 @@ class MarkovChain:
             li=line.strip()
    
             if not li.startswith("#"):
-                tmp = line.split(",")
-                self.M.append((float(tmp[0]), float(tmp[1])))
+                if "=" in li:
+                        if  li.split("=")[0]=='T':
+                            self.T=float(li.split("=")[1])
+                            print(self.T)
+                        elif li.split("=")[0]=='r':
+                            
+                            self.r=float(li.split("=")[1])
+                            print(self.r)
+                else:
+                    tmp = line.split(",")
+                    self.M.append((float(tmp[0]), float(tmp[1])))
         #print(self.M)
         f.close()
     
@@ -114,3 +125,11 @@ class MarkovChain:
         nodes=float(G.number_of_edges())
         q=(nodes*(nodes-1)/2)-b
         return(1/q)
+
+    #Funtion to return theta(Xi)
+    def theta_func(self,G):
+        theta=self.r*G.size(weight='weight')
+        for i in range(1,G.number_of_nodes()):
+            theta+=nx.shortest_path_length(G,source=G.nodes()[0],target=G.nodes()[i],weight='weight')
+
+        return(theta)
