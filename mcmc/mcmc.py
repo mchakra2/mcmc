@@ -8,36 +8,28 @@ import os
 class MarkovChain:
     input_f='./IOFiles/input.txt'
     G1=nx.Graph()
-    iterations=20#Number of Steps in the simulation
+    G2=nx.Graph()
+    iterations=200#Number of Steps in the simulation
     T=1
     r=1
-    
+    uniques={}#Empty dictionary to keep track of unique graphs and number of times they are observed
     def main(self):
+        
+        self.G1.clear()
+        self.G2.clear()
         self.input_arg(self.input_f)
         self.make_init_graph()
-        print(len(self.M))
-        bridge_selection=0
-        diff_g=0
-        for i in range(self.iterations):#Propose graph  modification at each simulation step
-            print(self.G1.number_of_edges())
-            #print("qji",self.calculate_q(self.G1))
-            flag=-1
-            
-            while(flag==-1):#if  the randomly selected edge is a bridge select a different edge
-                #print(self.G2.number_of_edges())
-                A=np.random.choice(len(self.M), 2,replace=0)#Choose a tuple randomly without replacement from the range of indices in M
-                flag=self.graph_change(A[0],A[1])#graph_change  function returns -1 if the edge  is  a bridge 
-                #print(self.G2.number_of_edges())
-                bridge_selection+=1
-            if self.G1!=self.G2:#Some messages  to  show that  we have  a new connected graph
-                diff_g+=1
-                print("Is G2 connectes?",nx.is_connected(self.G2))
-                print("G1 is not equal to G2")
-            print("qij/qji",self.calculate_q(self.G2)/self.calculate_q(self.G1))
-            #print(self.G1.number_of_edges())
-            self.G1=deepcopy(self.G2)#As of now I am always  accepting the new graph 
-        print('No. of bridges selected',bridge_selection-self.iterations)
-        return(diff_g)
+        self.uniques.clear()
+        self.mc_chain_generator()
+        d0=float(self.exp_d0)/self.iterations
+        E=float(self.exp_edgs)/self.iterations
+        avg_path=float(self.exp_max_path)/self.iterations
+        print('The expected number of edges connected to vertex 0 is ',d0)
+        print('The expected number of edges in the entire graph ',E)
+        print('The expected maximum distance of the shortest path in a graph that connects vertex 0 to another vertex',avg_path)
+        print('The number of unique graphs ',len(self.uniques))
+        #print('No. of bridges selected',bridge_selection-self.iterations)
+        return(d0,E,avg_path)
     
     #Function to calculate the weight of an edge            
     def dist(self,a,b):
@@ -64,11 +56,12 @@ class MarkovChain:
                 if "=" in li:
                         if  li.split("=")[0]=='T':
                             self.T=float(li.split("=")[1])
-                            print(self.T)
+                            #print(self.T)
                         elif li.split("=")[0]=='r':
                             
                             self.r=float(li.split("=")[1])
                             print(self.r)
+
                 else:
                     tmp = line.split(",")
                     self.M.append((float(tmp[0]), float(tmp[1])))
@@ -119,10 +112,10 @@ class MarkovChain:
             if len(nx.minimum_edge_cut(G,i[0],i[1]))==1:
                 b+=1
         return(b)
-    #Function to calculate the q probabilities for the proposal distribution
+    #Function to calculate the q(m|n)  probabilitie by taking in Xn as argument
     def calculate_q(self,G):
         b=self.calculate_bridges(G)
-        nodes=float(G.number_of_edges())
+        nodes=float(G.number_of_nodes())
         q=(nodes*(nodes-1)/2)-b
         return(1/q)
 
@@ -133,3 +126,66 @@ class MarkovChain:
             theta+=nx.shortest_path_length(G,source=G.nodes()[0],target=G.nodes()[i],weight='weight')
 
         return(theta)
+
+    #Function to implement metropolis-hastings algorithm
+    def MH(self):
+        #f=f(Xi,Xj)=pi_j/pi_i
+        f=math.exp(-float(self.theta_func(self.G2)-self.theta_func(self.G1))/self.T)
+        #print(f)
+        #q=q(i|j)/q(j|i)
+
+        q=self.calculate_q(self.G2)/self.calculate_q(self.G1)
+        aij=min(f*q,1)
+        U=np.random.random()
+        if aij>=U:
+            return(1)
+        else:
+            return(0)
+
+    #Function to return the maximum of the shortest path from vertex 0 to other vertices
+    def max_shortest_path(self,G):
+        v0=G.nodes()
+        P=nx.shortest_path_length(G, source=self.M[0],weight='weight')
+        max_path=-1
+        for i in P:
+            max_path=max(max_path,P[i])
+        return(max_path)
+
+    #Function to count uniques
+    def graph_count(self,G):
+        key=frozenset(G.edges(nbunch=self.M))
+
+        if key in self.uniques:#increment count if G has been observed before
+            self.uniques[key]+=1
+        else:#add to the dictionary if G has not been observed before
+            self.uniques[key]=1
+
+    #Function to generate the markov chain
+    def mc_chain_generator(self):
+        diff_g=0
+        self.uniques.clear()
+        self.exp_d0=0#Expectation of degree of vertex 0
+        self.exp_edgs=0
+        self.exp_max_path=0
+        for i in range(self.iterations):#Propose graph  modification at each simulation step
+            flag=-1
+            while(flag==-1):#if  the randomly selected edge is a bridge select a different edge
+
+                A=np.random.choice(len(self.M), 2,replace=0)#Choose a tuple randomly without replacement from the range of indices in M
+                flag=self.graph_change(A[0],A[1])#graph_change  function returns -1 if the edge  is  a bridge 
+
+                            
+            accept=self.MH()
+            if accept==1:
+                print('Change accepted')
+                self.G1=deepcopy(self.G2)
+
+
+            self.exp_d0+=self.G1.degree(self.M[0])
+            self.exp_edgs+=self.G1.number_of_edges()
+            self.exp_max_path+=self.max_shortest_path(self.G1)
+            self.graph_count(self.G1)
+
+        print(len(self.uniques))
+
+        
