@@ -17,6 +17,7 @@ from contextlib import contextmanager
 from click.testing import CliRunner
 from mcmc import mcmc
 from copy import deepcopy
+from operator import itemgetter
 
 
 class TestMcmc(unittest.TestCase):
@@ -128,8 +129,8 @@ class TestMcmc(unittest.TestCase):
         self.assertLessEqual(edge,max_edges)
         self.assertGreater(deg,0)#to check if the  proposed graph is different from the previous graph
         self.assertLessEqual(deg,nodes-1)
-        self.m.G1.clear()
-        self.m.G2.clear()
+        #self.m.G1.clear()
+        #self.m.G2.clear()
 
 
     def test_theta_func(self):
@@ -151,12 +152,13 @@ class TestMcmc(unittest.TestCase):
         self.m.G2.clear()
 
     def test_max_shortest_path(self):
+        self.m.G1.clear()
         self.m.input_arg('./tests/test_MH.txt')
         self.m.make_init_graph()
         self.assertEqual(self.m.max_shortest_path(self.m.G1),2)
-        self.m.G1.clear()
-
-    def test_graph_counter(self):
+        
+    #To check if graph counter actually keeps track of unique graph
+    def test_graph_counter_behavior(self):
         self.m.input_arg('./tests/test_MH.txt')
         self.m.make_init_graph()
         self.assertEqual(len(self.m.uniques),0)
@@ -173,9 +175,47 @@ class TestMcmc(unittest.TestCase):
         self.m.G1.clear()
         self.m.G2.clear()
 
+    #Total count of graphs in the markov chain should be equal to the number of iterations. To check that.
+    def test_total_graph_count(self):
+        self.m.input_arg('./tests/test_input.txt')
+        self.m.make_init_graph()
+        self.m.mc_chain_generator()
+        self.assertEqual(self.m.iterations,sum(self.m.uniques.values()))
+        self.m.uniques.clear()
+
     def test_mc_chain_generator(self):
         self.m.input_arg('./tests/test_MH.txt')
         self.m.make_init_graph()
         self.m.mc_chain_generator()
         assert (len(self.m.uniques)>0 and len(self.m.uniques)<=4)
+        self.m.G1.clear()
+        self.m.G2.clear()
         
+    #Testing the quantiling function when the number of unique graphs is less than 100. Since top 1% is fractional, the single most likely graph is returned 
+    def test_quantiling_single(self):
+        self.m.G1.clear()
+        self.m.G2.clear() 
+        self.m.input_arg('./tests/test_MH.txt')
+        self.m.make_init_graph()
+        self.m.mc_chain_generator()
+        top=len(self.m.quantiling())
+        self.assertEqual(top,1)
+        #To check that the output file is not empty
+        flag = os.path.exists(self.m.o_file)
+        self.assertTrue(flag)
+
+    
+    #Testing the quantiling function when the number of unique graphs is greater than or equal 100
+    def test_quantiling_multiple(self):
+        self.m.G1.clear()
+        self.m.G2.clear() 
+        self.m.input_arg('./tests/test_input.txt')
+        self.m.make_init_graph()
+        self.m.mc_chain_generator()
+        top=len(self.m.quantiling())
+        print(top,(0.01*len(self.m.uniques)))
+        assert (top-round(0.01*len(self.m.uniques)))<0.0001
+        #To check that the output file is not empty
+        flag = os.path.exists(self.m.o_file)
+        self.assertTrue(flag)
+

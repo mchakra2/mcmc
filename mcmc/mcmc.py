@@ -1,3 +1,4 @@
+from operator import itemgetter
 from copy import deepcopy
 import math
 import networkx as nx
@@ -7,6 +8,8 @@ import numpy as np
 import os
 class MarkovChain:
     input_f='./IOFiles/input.txt'
+    o_file="./IOFiles/output.txt"
+
     G1=nx.Graph()
     G2=nx.Graph()
     iterations=200#Number of Steps in the simulation
@@ -28,6 +31,8 @@ class MarkovChain:
         print('The expected number of edges in the entire graph ',E)
         print('The expected maximum distance of the shortest path in a graph that connects vertex 0 to another vertex',avg_path)
         print('The number of unique graphs ',len(self.uniques))
+        self.quantiling()
+
         #print('No. of bridges selected',bridge_selection-self.iterations)
         return(d0,E,avg_path)
     
@@ -61,6 +66,12 @@ class MarkovChain:
                             
                             self.r=float(li.split("=")[1])
                             print(self.r)
+                        elif li.split("=")[0]=='iterations':
+                            self.iterations=int(li.split("=")[1])
+                            print(self.iterations)
+
+                        elif li.split("=")[0]=='o_file':
+                            self.o_file=line.split("=")[1].rstrip()
 
                 else:
                     tmp = line.split(",")
@@ -86,18 +97,18 @@ class MarkovChain:
         if self.G2.has_edge(v1,v2)==False:
             #print(self.G1.number_of_edges())
             self.G2.add_edge(v1,v2,weight=self.dist(v1,v2))
-            print("Edge has been added")
+            #print("Edge has been added")
             #print(self.G2.number_of_edges())
             return(1)
         else:
             if len(nx.minimum_edge_cut(self.G2,v1,v2))==1:
-                print("Is a bridge")
+                #print("Is a bridge")
                 A=np.random.choice(len(self.M), 2,replace=0)
                 idx1=A[0]
                 return(-1)
             else:
                 self.G2.remove_edge(v1,v2)
-                print("Edge has been removed")
+                #print("Edge has been removed")
                 return(0)
 
     #Function to calculate the number of bridges in a given graph
@@ -177,7 +188,7 @@ class MarkovChain:
                             
             accept=self.MH()
             if accept==1:
-                print('Change accepted')
+                #print('Change accepted')
                 self.G1=deepcopy(self.G2)
 
 
@@ -185,7 +196,28 @@ class MarkovChain:
             self.exp_edgs+=self.G1.number_of_edges()
             self.exp_max_path+=self.max_shortest_path(self.G1)
             self.graph_count(self.G1)
-
+        self.G1.clear()
+        self.G2.clear()
         print(len(self.uniques))
 
+    #Function to return a list of edge-list of top 1% graphs generated in the markov chain
+    def quantiling(self):
+        print('The edge lists of the top 1% graphs are printed in the output file.')
+        f=open(self.o_file,"w")#Writing into the output file
         
+        desc_adj=sorted(self.uniques.items(), key=itemgetter(1), reverse=True)
+        top=0.01*len(self.uniques)
+        top_graphs=[]
+        if top<1:
+            print('Since there are less than 100 unique graphs, only the most likely graph will be written in the output file')
+            top_graphs.append(desc_adj[0][0])
+            f.write("%s\n"%top_graphs[0])
+        else:
+            i=0
+            while(i<=round(top,0)-1):
+                top_graphs.append(desc_adj[i][0])
+                f.write("%s\n"%top_graphs[i])
+                i+=1
+        
+        f.close()
+        return(top_graphs)
