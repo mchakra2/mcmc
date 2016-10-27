@@ -110,7 +110,7 @@ class TestMcmc(unittest.TestCase):
         self.assertEqual(5,self.m.calculate_bridges(G1))
         G1.clear()
         G.clear()
-
+        
     def test_calculate_q(self):
         G1=nx.star_graph(5)
         self.assertGreater(self.m.calculate_q(G1),0)
@@ -125,14 +125,14 @@ class TestMcmc(unittest.TestCase):
         #self.assertEqual(len(self.m.uniques),4)
         nodes=len(self.m.M)
         max_edges=nodes*(nodes-1)/2
-        self.assertGreater(edge,nodes-1)#
-        self.assertLessEqual(edge,max_edges)
-        self.assertGreater(deg,0)#to check if the  proposed graph is different from the previous graph
-        self.assertLessEqual(deg,nodes-1)
+        self.assertGreater(edge,nodes-1)#number of edges should be more than M-1 to stay connected. M is the number of nodes
+        self.assertLessEqual(edge,max_edges)#number of edges should be less than or equal to M(M-1)/2 where M is the number of nodes
+        self.assertGreater(deg,0)#to check that at least one or mode edges are connected to node 0
+        self.assertLessEqual(deg,nodes-1)#deg of vertex 0 should not me more than M-1
         #self.m.G1.clear()
         #self.m.G2.clear()
 
-
+    #Theta value should be greater than 0
     def test_theta_func(self):
 
         G=nx.star_graph(4)
