@@ -7,8 +7,8 @@ import numpy as np
 #import sys
 import os
 class MarkovChain:
-    input_f='./IOFiles/input.txt'
-    o_file="./IOFiles/output.txt"
+    input_f='./IOFiles/input.txt'#default input file location
+    o_file="./IOFiles/output.txt"#default output file location
 
     G1=nx.Graph()
     G2=nx.Graph()
@@ -16,14 +16,16 @@ class MarkovChain:
     T=1
     r=1
     uniques={}#Empty dictionary to keep track of unique graphs and number of times they are observed
+    
     def main(self):
-        
+        #Clear G1 and G2 in case they are not empty
         self.G1.clear()
         self.G2.clear()
         self.input_arg(self.input_f)
         self.make_init_graph()
         self.uniques.clear()
         self.mc_chain_generator()
+        #d0, E and avg_path are for calculating the expectations from the sum of these attributes over the period of simulation
         d0=float(self.exp_d0)/self.iterations
         E=float(self.exp_edgs)/self.iterations
         avg_path=float(self.exp_max_path)/self.iterations
@@ -32,11 +34,9 @@ class MarkovChain:
         print('The expected maximum distance of the shortest path in a graph that connects vertex 0 to another vertex',avg_path)
         print('The number of unique graphs ',len(self.uniques))
         self.quantiling()
-
-        #print('No. of bridges selected',bridge_selection-self.iterations)
         return(d0,E,avg_path)
     
-    #Function to calculate the weight of an edge            
+    '''Function to calculate the weight of an edge. The weight is the Euclidian distance between two node tuples'''
     def dist(self,a,b):
         if type(a)==tuple and type(b)==tuple:
             wt=math.sqrt((a[1]-b[1])**2+(a[0]-b[0])**2)
@@ -46,9 +46,9 @@ class MarkovChain:
             print ("Inputs should be tuples")
             raise TypeError
 
-    #Fuction for Reading the input file and storing the nodes as a list of tuples     
+    '''Fuction for Reading the input file and storing the nodes as a list of tuples'''     
     def input_arg(self, in_file):
-        self.M=[]
+        self.M=[]#list for the node tuples
         if os.path.exists(in_file)!= True:
             print ("The input file path does not exist. Default values will be used")
             raise IOError
@@ -57,7 +57,7 @@ class MarkovChain:
         for line in f:
             li=line.strip()
    
-            if not li.startswith("#"):
+            if not li.startswith("#"):#Ignore the lines starting with '#'
                 if "=" in li:
                         if  li.split("=")[0]=='T':
                             self.T=float(li.split("=")[1])
@@ -70,45 +70,40 @@ class MarkovChain:
                             self.iterations=int(li.split("=")[1])
                             print(self.iterations)
 
-                        elif li.split("=")[0]=='o_file':
-                            self.o_file=line.split("=")[1].rstrip()
-
                 else:
                     tmp = line.split(",")
                     self.M.append((float(tmp[0]), float(tmp[1])))
-        #print(self.M)
+        
         f.close()
-    
-    #Function to  make the initial graph with the given  nodes
+
+        
+    '''Function to  make the initial graph G1 with the given  nodes. I have just connected node 0 or the first node in M to all other nodes in M'''
     def make_init_graph(self):
         
         self.G1.add_nodes_from(self.M)
         for i in range(1,len(self.M)):
-            #print (i)
+            
             self.G1.add_edge(self.M[0],self.M[i],weight=self.dist(self.M[0],self.M[i]))
-        #print(self.G1.number_of_edges())
-    #Function to change the state of the edge between the given nodes
+       
+    '''Function to change the state of the edge between the given nodes. If the edge is not present, it is added else it is removed if it is not a bridge'''
     def graph_change(self,idx1,idx2):
         self.G2=deepcopy(self.G1)
-        #A=np.random.choice(len(self.M), 2,replace=0)
+        
         v1=self.M[idx1]
         v2=self.M[idx2]
-        #print(v1,v2)
-        if self.G2.has_edge(v1,v2)==False:
-            #print(self.G1.number_of_edges())
+        
+        if self.G2.has_edge(v1,v2)==False:#Edge between v1 and v2 is not present. Hence add the edge.
+            
             self.G2.add_edge(v1,v2,weight=self.dist(v1,v2))
-            #print("Edge has been added")
-            #print(self.G2.number_of_edges())
             return(1)
+        
         else:
-            if len(nx.minimum_edge_cut(self.G2,v1,v2))==1:
-                #print("Is a bridge")
-                A=np.random.choice(len(self.M), 2,replace=0)
-                idx1=A[0]
+            if len(nx.minimum_edge_cut(self.G2,v1,v2))==1:#Edge is present but it is a bridge. The graph is not altered 
+
                 return(-1)
+            
             else:
-                self.G2.remove_edge(v1,v2)
-                #print("Edge has been removed")
+                self.G2.remove_edge(v1,v2)#Edge is removed if it is present in graph but not a bridge
                 return(0)
 
     #Function to calculate the number of bridges in a given graph
@@ -123,6 +118,7 @@ class MarkovChain:
             if len(nx.minimum_edge_cut(G,i[0],i[1]))==1:
                 b+=1
         return(b)
+    
     #Function to calculate the q(m|n)  probabilitie by taking in Xn as argument
     def calculate_q(self,G):
         b=self.calculate_bridges(G)
@@ -140,16 +136,14 @@ class MarkovChain:
 
     #Function to implement metropolis-hastings algorithm
     def MH(self):
-        #f=f(Xi,Xj)=pi_j/pi_i
+
         f=math.exp(-float(self.theta_func(self.G2)-self.theta_func(self.G1))/self.T)
-        #print(f)
-        #q=q(i|j)/q(j|i)
 
         q=self.calculate_q(self.G2)/self.calculate_q(self.G1)
         aij=min(f*q,1)
-        U=np.random.random()
-        if aij>=U:
-            return(1)
+        U=np.random.random()#randomly chosen number between 0 and 1
+        if aij>=U: 
+            return(1)#flag to accept the proposed graph change if aij >= U
         else:
             return(0)
 
@@ -187,11 +181,11 @@ class MarkovChain:
 
                             
             accept=self.MH()
-            if accept==1:
-                #print('Change accepted')
+            if accept==1:#Accept the change if MH function returns 1
+                
                 self.G1=deepcopy(self.G2)
 
-
+            #Maintaining running averages for performing statistical analysis later
             self.exp_d0+=self.G1.degree(self.M[0])
             self.exp_edgs+=self.G1.number_of_edges()
             self.exp_max_path+=self.max_shortest_path(self.G1)
@@ -202,7 +196,7 @@ class MarkovChain:
 
     #Function to return a list of edge-list of top 1% graphs generated in the markov chain
     def quantiling(self):
-        print('The edge lists of the top 1% graphs are printed in the output file.')
+        print('The edge lists of the top 1% graphs are printed in ', self.o_file)
         f=open(self.o_file,"w")#Writing into the output file
         
         desc_adj=sorted(self.uniques.items(), key=itemgetter(1), reverse=True)

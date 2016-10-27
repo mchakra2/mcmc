@@ -66,14 +66,14 @@ class TestMcmc(unittest.TestCase):
         self.assertIsInstance(self.m.G1,nx.Graph)
         self.assertTrue(nx.is_connected(self.m.G1),'Initial Graph is connected')#checks if initial graph is connected
         
-        #self.assertTrue(self.m.G1.number_of_edges()==(self.m.G1.number_of_nodes() -1))
+
 
 
     def test_graph_change_add(self):
         self.m.input_arg('./tests/test_input.txt')
         self.m.make_init_graph()
-        self.assertEqual(self.m.graph_change(1,2),1)
-        self.assertNotEqual(self.m.G1.number_of_edges(),self.m.G2.number_of_edges())
+        self.assertEqual(self.m.graph_change(1,2),1)#Since no two non zero vertices are connected, passing two vertices other than vertex0 sould add an edge
+        self.assertNotEqual(self.m.G1.number_of_edges(),self.m.G2.number_of_edges())#ensures that the new graph is not the same as the old graph
         self.m.G1.clear()
         self.m.G2.clear()
 
@@ -151,6 +151,7 @@ class TestMcmc(unittest.TestCase):
         self.m.G1.clear()
         self.m.G2.clear()
 
+    #The input file has only three nodes. And the initial graph has two edges connecting node 0 to the other two nodes. The longer edge is of length 2
     def test_max_shortest_path(self):
         self.m.G1.clear()
         self.m.input_arg('./tests/test_MH.txt')
@@ -182,7 +183,8 @@ class TestMcmc(unittest.TestCase):
         self.m.mc_chain_generator()
         self.assertEqual(self.m.iterations,sum(self.m.uniques.values()))
         self.m.uniques.clear()
-
+        
+    #Our test_MH.txt has only three nodes hence there are only 4 different connected graphs possible. This checks that the number of uniques after simulation is not more than the maximum possible unique graphs
     def test_mc_chain_generator(self):
         self.m.input_arg('./tests/test_MH.txt')
         self.m.make_init_graph()
